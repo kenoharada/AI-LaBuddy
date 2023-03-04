@@ -20,3 +20,6 @@ export OPENAI_API_KEY=sk-
 pip install slack_bolt openai tiktoken
 python3 app.py
 ```
+
+ChatGPT を使用しながら開発
+https://sharegpt.com/c/qlJlJow
