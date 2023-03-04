@@ -15,4 +15,5 @@ AI LaBuddyには、以下のような機能が含まれます。
 AI LaBuddyは、研究者がより効率的に研究を進めるための、頼もしい助け手となるでしょう。
 
 以上の文章はChatGPTによって作成されています。
-https://shareg.pt/nmXshhN
+
+https://shareg.pt/6wVZAJ2
