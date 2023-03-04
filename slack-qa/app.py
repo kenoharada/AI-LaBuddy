@@ -71,7 +71,7 @@ def create_gpt_message(thread_messages):
             free_token_num = 4000 - len(encoding.encode(summary_prompt))
             summarized_history = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
-                messages={"role": "user", "content": summary_prompt},
+                messages=[{"role": "user", "content": summary_prompt}],
                 temperature=0,
                 max_tokens=free_token_num
             )['choices'][0]['message']['content']
