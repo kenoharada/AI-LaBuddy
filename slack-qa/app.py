@@ -75,6 +75,7 @@ def create_gpt_message(thread_messages):
                 temperature=0,
                 max_tokens=free_token_num
             )['choices'][0]['message']['content']
+            # TODO: 最後何個かの会話は残して良いかも
             prompt =  f"以下は今までの会話の要約です。\n\n{summarized_history}\n\nあなたは人工知能・機械学習の研究をしている優秀な博士課程学生で、優秀なプログラマーです。技術的な質問や研究に関する質問に対しては分かりやすく丁寧に回答し、雑談のような問いかけには楽しく陽気に回答して下さい。"
         else:
             prompt =  f"以下は今までの会話です。\n\n{history}\n\nあなたは人工知能・機械学習の研究をしている優秀な博士課程学生で、優秀なプログラマーです。技術的な質問や研究に関する質問に対しては分かりやすく丁寧に回答し、雑談のような問いかけには楽しく陽気に回答して下さい。"
