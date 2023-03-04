@@ -32,12 +32,27 @@ def get_thread_messages(channel_id, thread_ts):
 
 def create_gpt_message(thread_messages):
     if len(thread_messages) == 1:
+        # 会話の始まり
         prompt = "あなたは人工知能・機械学習の研究をしている優秀な博士課程学生で、優秀なプログラマーです。技術的な質問や研究に関する質問に対しては分かりやすく丁寧に回答し、雑談のような問いかけには楽しく陽気に回答して下さい"
         last_message = thread_messages[0]['text']
         gpt_message = [
                     {"role": "system", "content": prompt},
                     {"role": "user", "content": last_message},
                 ]
+        free_token_num = 4000 - (len(encoding.encode(prompt)) + len(encoding.encode(last_message)))
+        response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=gpt_message,
+                temperature=0,
+                max_tokens=free_token_num
+            )['choices'][0]['message']['content']
+        with open(os.path.join(log_dir, f"{thread_messages[0]['ts']}_{thread_messages[0]['ts']}_prompt.txt"), 'w') as f:
+            f.write(prompt)
+        with open(os.path.join(log_dir, f"{thread_messages[0]['ts']}_{thread_messages[0]['ts']}_lastmessage.txt"), 'w') as f:
+            f.write(last_message)
+        with open(os.path.join(log_dir, f"{thread_messages[0]['ts']}_{thread_messages[0]['ts']}_response.txt"), 'w') as f:
+            f.write(response)
+        return response
     elif len(thread_messages) == 0:
         return ""
     else:
@@ -92,12 +107,18 @@ app = App(token=os.environ["SLACK_BOT_TOKEN"])
 @app.event("message")
 def handle_message(event, say):
     try:
+        print(event)
         channel_id = event["channel"]
-        thread_ts = event["thread_ts"] if "thread_ts" in event else event["ts"]
 
         if channel_id == SLACK_CHANNEL_ID:
-            thread_messages = get_thread_messages(channel_id, thread_ts)
-            response = create_gpt_message(thread_messages)
+            if "thread_ts" in event.keys():
+                thread_ts = event["thread_ts"]
+                thread_messages = get_thread_messages(channel_id, thread_ts)
+                response = create_gpt_message(thread_messages)
+            else:
+                thread_ts = event["ts"]
+                thread_messages = [event]
+                response = create_gpt_message(thread_messages)
             print(thread_messages)
             print(response)
             say(text=response, thread_ts=thread_ts)
