@@ -91,17 +91,20 @@ app = App(token=os.environ["SLACK_BOT_TOKEN"])
 # メッセージを受信した時の処理
 @app.event("message")
 def handle_message(event, say):
-    channel_id = event["channel"]
-    thread_ts = event["thread_ts"]
+    try:
+        channel_id = event["channel"]
+        thread_ts = event["thread_ts"] if "thread_ts" in event else event["ts"]
 
-    if channel_id == SLACK_CHANNEL_ID:
-        thread_messages = get_thread_messages(channel_id, thread_ts)
-        response = create_gpt_message(thread_messages)
-        print(thread_messages)
-        print(response)
-        say(text=response, thread_ts=thread_ts)
-    else:
-        pass
+        if channel_id == SLACK_CHANNEL_ID:
+            thread_messages = get_thread_messages(channel_id, thread_ts)
+            response = create_gpt_message(thread_messages)
+            print(thread_messages)
+            print(response)
+            say(text=response, thread_ts=thread_ts)
+        else:
+            pass
+    except Exception as e:
+        print(e)
 
 
 # アプリを起動します

@@ -1,6 +1,6 @@
 # slack-qa
 
-https://slack.dev/bolt-python/ja-jp/tutorial/getting-started
+https://slack.dev/bolt-python/ja-jp/tutorial/getting-started  
 上記を参考に SLACK_BOT_TOKEN、SLACK_APP_TOKEN を発行
 
 ## 準備
