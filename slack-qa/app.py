@@ -67,6 +67,7 @@ def create_gpt_message(thread_messages):
                 history += f"{user_name}さん: {thread_message['text']}\n"
                 last_message = f"{user_name}さん: {thread_message['text']}\nあなた: "
         if len(encoding.encode(history)) > 3072:
+            # TODO: history自体が4096token超えたらアカン
             summary_prompt = f"以下は会話のやり取りです。やり取りを200文字程度に要約して下さい。\n\n{history}"
             free_token_num = 4000 - len(encoding.encode(summary_prompt))
             summarized_history = openai.ChatCompletion.create(
