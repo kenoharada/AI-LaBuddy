@@ -80,7 +80,7 @@ while True:
             for tweet in new_tweets:
                 message = f"{username}: {tweet['text']} \nhttps://twitter.com/{username}/status/{tweet['id']}"
                 post_to_slack(SLACK_BOT_TOKEN, SLACK_CHANNEL_ID, message)
-                time.sleep(2)
+                time.sleep(5)
 
     # 一定時間（ここでは12時間）待機
     time.sleep(60 * 60 * 12)
