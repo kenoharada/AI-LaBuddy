@@ -78,7 +78,7 @@ while True:
         if new_tweets:
             print(f"New tweets from {username}:")
             for tweet in new_tweets:
-                message = f"{username}\nhttps://twitter.com/{username}/status/{tweet['id']}"
+                message = f"{username}: {tweet['text']} \nhttps://twitter.com/{username}/status/{tweet['id']}"
                 post_to_slack(SLACK_BOT_TOKEN, SLACK_CHANNEL_ID, message)
                 time.sleep(2)
 
