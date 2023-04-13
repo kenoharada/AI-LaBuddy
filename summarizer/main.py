@@ -9,13 +9,37 @@ def download_subtitle(video_url, language='en'):
         'subtitleslangs': [language],
         'subtitlesformat': 'vtt',
         'outtmpl': '%(title)s.%(ext)s',
-        # 'restrictfilenames': True,
+        'restrictfilenames': True,
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info_dict = ydl.extract_info(video_url, download=False)
-        title = info_dict.get('title', None)
-        filename = f"{title}.{language}.vtt"
+        filename = ydl.prepare_filename(info_dict).replace('.webm', f'.{language}.vtt')
+        title = filename.split('.')[0]
+        ydl.download([video_url])
+
+    if os.path.exists(filename):
+        return filename, title
+    else:
+        return None, None
+
+
+def download_subtitle_auto(video_url, language='en'):
+    ydl_opts = {
+        'skip_download': True,
+        # 'writesubtitles': True,
+        'writeautomaticsub': True,
+        'subtitleslangs': [language],
+        'subtitlesformat': 'vtt',
+        'outtmpl': '%(title)s.%(ext)s',
+        'restrictfilenames': True,
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info_dict = ydl.extract_info(video_url, download=False)
+        filename = ydl.prepare_filename(info_dict).replace('.webm', f'.{language}.vtt')
+        title = filename.split('.')[0]
+        print(filename, title)
         ydl.download([video_url])
 
     if os.path.exists(filename):
@@ -69,23 +93,62 @@ def split_text(text):
     return splitter.split_text(text)
 
 if __name__ == '__main__':
-    video_url = 'https://www.youtube.com/watch?v=zFZrkCIc2Oc'  # 動画のURLを入れてください
-    vtt_file_path, title = download_subtitle(video_url, language='en')  # 'en' を希望する言語のコードに変更してください
-    if vtt_file_path:
-        extracted_text = extract_text_from_vtt(vtt_file_path)
-        print(extracted_text)
-    else:
-        print("Failed to download subtitle.")
-    text = extracted_text.replace('\n', ' ')
-    text_splits = split_text(text)
-    print(len(text_splits))
-    if not os.path.exists(title):
-        os.makedirs(title)
-    for idx, text_split in enumerate(text_splits):
-        print(text_split)
-        summary = summarize(text_split, title)
-        with open(f"{title}/summary_{idx}.txt", "w") as f:
-            f.write(summary)
-        with open(f"{title}/summary.txt", "a") as f:
-            f.write(summary)
-            f.write('\n')
+    video_urls = [
+        'https://www.youtube.com/watch?v=zFZrkCIc2Oc',
+        'https://www.youtube.com/watch?v=NcoBAfJ6l2Q',
+        'https://www.youtube.com/watch?v=EOLPQdVj5Ac',
+        'https://www.youtube.com/watch?v=w8q0C-C1js4',
+        'https://www.youtube.com/watch?v=YzP164YANAU',
+        'https://www.youtube.com/watch?v=x5trGVMKTdY',
+        'https://www.youtube.com/watch?v=jrBhi8wbzPw',
+        'https://www.youtube.com/watch?v=WbRDkJ4lPdY',
+        'https://www.youtube.com/watch?v=6PWTxRGh_dk',
+    ]
+    overview = ''
+    for video_url in video_urls:
+        vtt_file_path, title = download_subtitle(video_url, language='en')  # 'en' を希望する言語のコードに変更してください
+        print(vtt_file_path)
+        print(title)
+        if vtt_file_path:
+            extracted_text = extract_text_from_vtt(vtt_file_path)
+            print(extracted_text)
+        else:
+            vtt_file_path, title = download_subtitle_auto(video_url, language='en')  # 'en' を希望する言語のコードに変更してください
+            print(vtt_file_path)
+            print(title)
+            if vtt_file_path:
+                extracted_text = extract_text_from_vtt(vtt_file_path)
+                print(extracted_text)
+            else:
+                print("Failed to download subtitle.")
+                continue
+        text = extracted_text.replace('\n', ' ')
+        text_splits = split_text(text)
+        if not os.path.exists(title):
+            os.makedirs(title)
+        with open (f"{title}/text.txt", "w") as f:
+            f.write(text)
+        total_summary = ''
+        for idx, text_split in enumerate(text_splits):
+            print(text_split)
+            summary = summarize(text_split, title)
+            with open(f"{title}/summary_{idx}.txt", "w") as f:
+                f.write(summary)
+            total_summary += summary
+            total_summary += '\n'
+        with open(f"{title}/summary.txt", "w") as f:
+            f.write(total_summary)
+        
+        from make_lecture_notes import summarize_to_notes, split_chunk_by_token_nums
+        text_splits = split_chunk_by_token_nums(total_summary)
+        notes = ''
+        for text_split in text_splits:
+            note = summarize_to_notes(text_split, title)
+            notes += note
+            notes += '\n'
+        with open(f"{title}/notes.txt", "w") as f:
+            f.write(notes)
+        overview += f"## {title}\n"
+        overview += f"{notes}\n"
+    with open("overview.md", "w") as f:
+        f.write(overview)
