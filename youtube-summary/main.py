@@ -39,15 +39,16 @@ def process_text(text):
   processed_idx = 0
   processing_text = ''
   prompt = (
-    'The following section enclosed by ## is a transcription from a YouTube video. Please summarize the important points in bullet points.　Keep the language consistent with the language used in the section enclosed by ##.\n\n'
+    'The following section enclosed by ## is a transcription from a YouTube video. Please summarize the important points in bullet points. Please answer in the same language as the language enclosed in ##.\n\n'
     '##\nTranscription content\n##')
 
   token_budget = 4096 - 512 - num_tokens(prompt)
   messages_list = []
+  print(text_chunks)
   if len(text_chunks) == 1:
     if num_tokens(text_chunks[0]) < token_budget:
       prompt = (
-        'The following section enclosed by ## is a transcription from a YouTube video. Please summarize the important points in bullet points.　Keep the language consistent with the language used in the section enclosed by ##.\n\n'
+        'The following section enclosed by ## is a transcription from a YouTube video. Please summarize the important points in bullet points. Please answer in the same language as the language enclosed in ##.\n\n'
         f'##\n{text_chunks[0]}\n##')
       messages = [
         {
@@ -59,7 +60,7 @@ def process_text(text):
       messages_list.append(messages)
     else:
       prompt = (
-        'The following section enclosed by ## is a transcription from a YouTube video. Please summarize the important points in bullet points. Keep the language consistent with the language used in the section enclosed by ##.\n\n'
+        'The following section enclosed by ## is a transcription from a YouTube video. Please summarize the important points in bullet points. Please answer in the same language as the language enclosed in ##.\n\n'
         f'##\n{text_chunks[0][:token_budget]}\n##')
       messages = [
         {
@@ -67,7 +68,7 @@ def process_text(text):
           "content": prompt
         },
       ]
-      print(messages)
+      # print(messages)
       messages_list.append(messages)
   else:
     while processed_idx < len(text_chunks):
@@ -80,7 +81,7 @@ def process_text(text):
         processed_idx += 1
       else:
         prompt = (
-          'The following section enclosed by ## is a transcription from a YouTube video. Please summarize the important points in bullet points. Keep the language consistent with the language used in the section enclosed by ##. \n\n'
+          'The following section enclosed by ## is a transcription from a YouTube video. Please summarize the important points in bullet points. Please answer in the same language as the language enclosed in ##.\n\n'
           f'##\n{processing_text}\n##')
         messages = [
           {
@@ -88,11 +89,12 @@ def process_text(text):
             "content": prompt
           },
         ]
-        print(messages)
+        # print(messages)
         messages_list.append(messages)
+        processing_text = ''
     if len(messages_list) == 0:
       prompt = (
-        'The following section enclosed by ## is a transcription from a YouTube video. Please summarize the important points in bullet points. Keep the language consistent with the language used in the section enclosed by ##.\n\n'
+        'The following section enclosed by ## is a transcription from a YouTube video. Please summarize the important points in bullet points. Please answer in the same language as the language enclosed in ##.\n\n'
         f'##\n{processing_text}\n##')
       messages = [
         {
@@ -101,7 +103,7 @@ def process_text(text):
         },
       ]
       messages_list.append(messages)
-
+  print('API call')
   predictions = asyncio.run(
     dispatch_openai_requests(
       messages_list=messages_list,
@@ -113,7 +115,68 @@ def process_text(text):
 
   for i, x in enumerate(predictions):
     summaries.append(x['choices'][0]['message']['content'])
-  # print(summaries)
+  print(summaries)
+  print(len(summaries))
+  with open('points.txt', 'w') as f:
+    f.write('\n'.join(summaries))
+  
+  messages_list = [[
+    {
+      "role":
+      "system",
+      "content":
+      "You are a professional translator. Please translate the following text into English if it's not written in English. Just return the original text if it's written in English."
+    },
+    {
+      "role": "user",
+      "content": summary
+    },
+  ] for summary in summaries]
+
+  predictions_en = asyncio.run(
+    dispatch_openai_requests(
+      messages_list=messages_list,
+      model="gpt-3.5-turbo",
+      temperature=0,
+      top_p=1.0,
+    ))
+
+  messages_list = [[
+    {
+      "role":
+      "system",
+      "content":
+      "You are a professional translator. Please translate the following text into Japanese if it's not written in Japanese. Just return the original text if it's written in Japanese."
+    },
+    {
+      "role": "user",
+      "content": summary
+    },
+  ] for summary in summaries]
+
+  predictions_jp = asyncio.run(
+    dispatch_openai_requests(
+      messages_list=messages_list,
+      model="gpt-3.5-turbo",
+      temperature=0,
+      top_p=1.0,
+    ))
+  
+  output = '\n'.join([
+    prediction['choices'][0]['message']['content']
+    for prediction in predictions_en
+  ])
+  output_jp = '\n'.join([
+    prediction['choices'][0]['message']['content']
+    for prediction in predictions_jp
+  ])
+
+  with open('points_en.txt', 'w') as f:
+    f.write(output)
+  
+  with open('points_jp.txt', 'w') as f:
+    f.write(output_jp)
+
 
   messages_list = []
   processed_idx = 0
@@ -128,7 +191,7 @@ def process_text(text):
       processed_idx += 1
     else:
       prompt = (
-        'Please provide a single summary in 3-5 sentences, incorporating the key points from the bullet points below. Keep the language consistent with the language used in the section enclosed by ##. \n\n'
+        'Please provide a single summary in 3-5 sentences, incorporating the key points from the bullet points below. Please answer in the same language as the language enclosed in ##.\n\n'
         f'##\n{processing_text}\n##')
       messages = [
         {
@@ -137,9 +200,10 @@ def process_text(text):
         },
       ]
       messages_list.append(messages)
+      processing_text = ''
   if len(messages_list) == 0:
     prompt = (
-      'Please provide a single summary in 3-5 sentences, incorporating the key points from the bullet points below. Keep the language consistent with the language used in the section enclosed by ##. \n\n'
+      'Please provide a single summary in 3-5 sentences, incorporating the key points from the bullet points below. Please answer in the same language as the language enclosed in ##.\n\n'
       f'##\n{processing_text}\n##')
     messages = [
       {
@@ -169,6 +233,7 @@ def process_text(text):
       "content": prediction['choices'][0]['message']['content']
     },
   ] for prediction in predictions]
+  print(messages_list)
 
   predictions_en = asyncio.run(
     dispatch_openai_requests(
@@ -190,6 +255,7 @@ def process_text(text):
       "content": prediction['choices'][0]['message']['content']
     },
   ] for prediction in predictions]
+  print(messages_list)
 
   predictions_jp = asyncio.run(
     dispatch_openai_requests(
