@@ -122,7 +122,6 @@ for influencer_tweets_json in tweets_json:
         print(influencer_tweet['text'])
         response = process_tweet(influencer_tweet['text'])
         if response != '':
-            print(response)
             script = response.split('script:')[-1].strip()
             print(script)
             messages = [
