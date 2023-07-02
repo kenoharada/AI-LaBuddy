@@ -23,13 +23,13 @@ if date_element is not None:
     }
     print(data)
 
-#     json_data = json.dumps(data, ensure_ascii=False)
+    json_data = json.dumps(data, ensure_ascii=False)
 
-#     # ファイルへの保存例
-#     with open('output.json', 'w', encoding='utf-8') as file:
-#         file.write(json_data)
-# else:
-#     print("要素が見つかりませんでした。")
+    # ファイルへの保存例
+    with open('today_info.json', 'w', encoding='utf-8') as file:
+        file.write(json_data)
+else:
+    print("要素が見つかりませんでした。")
 import re
 
 def parse_voice(text):
@@ -56,7 +56,7 @@ system_message = f"""
 テレビ番組で、アナウンサーの森さんと国民的人気アイドルの愛ちゃん2人が「{contents}」について話し合っています。
 アナウンサーは「{contents}」について簡単な話題提供を行いつつ、話を振ります。
 アイドルは、元気はつらつに愛嬌よく面白おかしいエピソードを話します。
-話題について冗長になりすぎず、一通り盛り上がったらアナウンサーが「次の話題に移ります」と言って会話が終了します。
+話題について一通り盛り上がったらアナウンサーが「次の話題に移ります」と言って会話が終了します。
 一連の会話の流れを文章に起こしてください。
 フォーマットは
 アナウンサー: 発言
@@ -74,7 +74,7 @@ response = openai.ChatCompletion.create(
 print(response)
 print(parse_voice(response))
 dialogue_list = parse_voice(response)
-with open('output.json', 'w', encoding='utf-8') as file:
+with open('today_dialogue.json', 'w', encoding='utf-8') as file:
     json.dump(dialogue_list, file, ensure_ascii=False)
 
 

@@ -15,8 +15,10 @@ headers = {
     "AUTHORIZATION": PLAY_API_KEY,
     "X-USER-ID": PLAY_USER_ID
 }
+# dialogue_json = 'today_dialogue.json'
+dialogue_json = 'news_dialogue_0.json'
 
-dialogue_list = json.load(open('output.json'))
+dialogue_list = json.load(open(dialogue_json))
 
 for dialogue in dialogue_list:
     print(dialogue)
@@ -24,22 +26,22 @@ for dialogue in dialogue_list:
         payload = {
             "content": [dialogue['text']],
             "voice": "ja-JP-KeitaNeural",
-            "globalSpeed": "130%"
+            # "globalSpeed": "130%"
         }
     elif dialogue['person'] == 'アイドル':
         payload = {
             "content": [dialogue['text']],
             "voice": "ja-JP-NanamiNeural",
-            "globalSpeed": "130%"
+            # "globalSpeed": "130%"
         }
     response = requests.post(PLAY_URL, json=payload, headers=headers)
     transcriptionId = response.json()['transcriptionId']
     dialogue['transcriptionId'] = transcriptionId
 
-with open('output.json', 'w', encoding='utf-8') as file:
+with open(dialogue_json, 'w', encoding='utf-8') as file:
     json.dump(dialogue_list, file, ensure_ascii=False)
 
-dialogue_list = json.load(open('output.json'))
+dialogue_list = json.load(open(dialogue_json))
 if not os.path.exists('audio'):
     os.mkdir('audio')
 max_trial = 5
@@ -73,5 +75,5 @@ for dialogue in dialogue_list:
             trial += 1
             if trial >= max_trial:
                 break
-with open('output.json', 'w', encoding='utf-8') as file:
+with open(dialogue_json, 'w', encoding='utf-8') as file:
     json.dump(dialogue_list, file, ensure_ascii=False)
